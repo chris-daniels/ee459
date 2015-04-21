@@ -21,14 +21,18 @@ public class DeviceListActivity extends Activity {
     // Debugging for LOGCAT
     private static final String TAG = "DeviceListActivity";
     private static final boolean D = true;
-     
-   
+    
+    //stuff I added
+    private boolean oneDevice = false;
+    private String deviceOneInfo, deviceOneAddress;
+    
     // declare button for launching website and textview for connection status
     Button tlbutton;
     TextView textView1;
      
     // EXTRA string to send on to mainactivity
-    public static String EXTRA_DEVICE_ADDRESS = "device_address";
+    public static String EXTRA_DEVICE_OUTPUT_ADDRESS = "device_output_address";
+    public static String EXTRA_DEVICE_INPUT_ADDRESS = "device_input_address";
  
     // Member fields
     private BluetoothAdapter mBtAdapter;
@@ -81,15 +85,31 @@ public class DeviceListActivity extends Activity {
     private OnItemClickListener mDeviceClickListener = new OnItemClickListener() {
         public void onItemClick(AdapterView<?> av, View v, int arg2, long arg3) {
  
-            textView1.setText("Connecting...");
-            // Get the device MAC address, which is the last 17 chars in the View
-            String info = ((TextView) v).getText().toString();
-            String address = info.substring(info.length() - 17);
- 
-            // Make an intent to start next activity while taking an extra which is the MAC address.
-            Intent i = new Intent(DeviceListActivity.this, MainActivity.class);
-            i.putExtra(EXTRA_DEVICE_ADDRESS, address);
-            startActivity(i);   
+        	if(!oneDevice){
+        		oneDevice = true;
+        		
+        		textView1.setText("Connecting...");
+        		deviceOneInfo = ((TextView) v).getText().toString();
+        		deviceOneAddress = deviceOneInfo.substring(deviceOneInfo.length() - 17);
+        		
+        		textView1.setText("Input: connected to address " + deviceOneAddress);
+        		
+        	}
+        	else{
+        		oneDevice = false;
+        		
+                textView1.setText("Connecting...");
+                // Get the device MAC address, which is the last 17 chars in the View
+                String deviceTwoInfo = ((TextView) v).getText().toString();
+                String deviceTwoAddress = deviceTwoInfo.substring(deviceTwoInfo.length() - 17);
+     
+                // Make an intent to start next activity while taking an extra which is the MAC address.
+                Intent i = new Intent(DeviceListActivity.this, MainActivity.class);
+                i.putExtra(EXTRA_DEVICE_OUTPUT_ADDRESS, deviceTwoAddress);
+                i.putExtra(EXTRA_DEVICE_INPUT_ADDRESS, deviceOneAddress);
+                startActivity(i);   
+        	}
+        	
         }
     };
  
@@ -105,7 +125,6 @@ public class DeviceListActivity extends Activity {
             //Prompt user to turn on Bluetooth
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, 1);
-  
             }
           }
         }
