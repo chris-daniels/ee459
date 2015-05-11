@@ -4,11 +4,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.UUID;
+
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.Context;
 import android.content.Intent;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
@@ -21,8 +27,9 @@ import android.widget.Toast;
 public class MainActivity extends Activity {
 
 	public final static String EXTRA_MESSAGE = "com.example.arduinosensors.MESSAGE";
-	Button btnOn, btnOff, btnSend;
-	TextView txtArduino, txtString, txtStringLength, sensorView0, displayAddressIn, displayAddressOut;
+	Button btnOn, btnOff, btnSend, btnGPS;
+	TextView txtArduino, txtString, txtStringLength;
+	TextView txtSpeed, txtLatitude, txtLongitude, txtAltitude;
 	private char userInput ;
 	Handler bluetoothIn;
 
@@ -30,6 +37,12 @@ public class MainActivity extends Activity {
 	private BluetoothAdapter btAdapter = null;
 	private BluetoothSocket inSocket = null;
 	private BluetoothSocket outSocket = null;
+	
+	public LocationManager locManager;
+	public LocationListener locListener;
+	
+	private double latitude, longitude, altitude;
+	private float speed;
 	
 	private StringBuilder recDataString = new StringBuilder();
 
@@ -43,6 +56,7 @@ public class MainActivity extends Activity {
 	private static String inputAddress;
 	private static String outputAddress;
 	
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -53,21 +67,67 @@ public class MainActivity extends Activity {
 		btnOn = (Button) findViewById(R.id.buttonOn);
 		btnOff = (Button) findViewById(R.id.buttonOff);
 		btnSend = (Button) findViewById(R.id.send_input);
+		btnGPS = (Button) findViewById(R.id.getGPS);
 		txtString = (TextView) findViewById(R.id.txtString);
 		txtStringLength = (TextView) findViewById(R.id.testView1);
-		sensorView0 = (TextView) findViewById(R.id.sensorView0);
-		displayAddressIn = (TextView) findViewById(R.id.displayAddressIn);
-		displayAddressOut = (TextView) findViewById(R.id.displayAddressOut);
+		txtSpeed = (TextView) findViewById(R.id.txtSpeed);
+		txtLatitude = (TextView) findViewById(R.id.txtLatitude);
+		txtLongitude = (TextView) findViewById(R.id.txtLongitude);
+		txtAltitude = (TextView) findViewById(R.id.txtAltitude);
 		
-		displayAddressIn.setText("in...");
-		displayAddressOut.setText("out...");
 		
+//		//set up initial gps stuff
+		locManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+		Location location = locManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+//		Location location = locManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+		longitude = location.getLongitude();
+		txtLongitude.setText("Longitude: " + longitude);
+		latitude = location.getLatitude();
+		txtLatitude.setText("Latitude: " + latitude);
+		altitude = location.getAltitude();
+		txtAltitude.setText("Elevation: " + altitude);
+		speed = location.getSpeed();
+		txtSpeed.setText(speed + "m/s");
+
+		locListener = new LocationListener() {
+			
+			@Override
+		    public void onLocationChanged(Location location) {
+				longitude = location.getLongitude();
+				txtLongitude.setText("Longitude: " + longitude);
+				latitude = location.getLatitude();
+				txtLatitude.setText("Latitude: " + latitude);
+				altitude = location.getAltitude();
+				txtAltitude.setText("Elevation: " + altitude);
+				speed = location.getSpeed();
+				txtSpeed.setText(speed + "m/s");
+				
+				//outConnectedThread.write("%Speed: " + speed + "m/s\n" + "Longitude: " + longitude + "\n" + "Latitude: " + latitude + "\n" + "Elevation: " + altitude + "\n");
+		    }
+
+			@Override
+		    public void onStatusChanged(String provider, int status, Bundle extras) {}
+
+			@Override
+		    public void onProviderEnabled(String provider) {}
+
+			@Override
+		    public void onProviderDisabled(String provider) {}
+		  };
+//		  
+//		Criteria crit = new Criteria();
+//		crit.setAccuracy(Criteria.ACCURACY_FINE);
+//		String best = locManager.getBestProvider(crit, false);
+		locManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 1, locListener);
+//		locManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 1, locListener);
+
+		
+		//bluetooth input handler
 		bluetoothIn = new Handler() {
 			public void handleMessage(android.os.Message msg) {
 				if (msg.what == handlerState) {                                     //if message is what we want
 					
-					sensorView0.setText("woooooooo");
-					String readMessage = (String) msg.obj;                                                                // msg.arg1 = bytes from connect thread
+					String readMessage = (String) msg.obj;                          // msg.arg1 = bytes from connect thread
 					
 					byte b = readMessage.getBytes()[0];
 					int i = b & 0xFF;
@@ -78,26 +138,6 @@ public class MainActivity extends Activity {
 					
 					if(b != 0)
 						sendToHelmet(b);
-					//recDataString.append(readMessage);                                      //keep appending to string until ~
-					//int endOfLineIndex = recDataString.indexOf("~");                    // determine the end-of-line
-					//if (endOfLineIndex > 0) {                                           // make sure there data before ~
-						//String dataInPrint = recDataString.substring(0, endOfLineIndex);    // extract string
-						//txtString.setText("Data Received = " + dataInPrint);
-						//int dataLength = dataInPrint.length();                          //get length of data received
-						//txtStringLength.setText("String Length = " + String.valueOf(dataLength));
-
-					//	if (recDataString.charAt(0) == '#')                             //if it starts with # we know it is what we are looking for
-						//{
-							//String sensor0 = recDataString.substring(1, 5);             //get sensor value from string between indices 1-5
-							//used to be more of these
-
-							//sensorView0.setText(" Sensor 0 Voltage = " + sensor0 + "V");    //update the textviews with sensor values
-							//used to be more of these
-						//}
-						//recDataString.delete(0, recDataString.length());                    //clear all string data
-						// keep commented strIncom =" ";
-						//dataInPrint = " ";
-					//}
 				}
 			}
 		};
@@ -124,8 +164,26 @@ public class MainActivity extends Activity {
 			public void onClick(View v) {
 				EditText editText = (EditText) findViewById(R.id.input_text);
 				String message = editText.getText().toString();
-				outConnectedThread.write(message);    // Send "1" via Bluetooth
-				Toast.makeText(getBaseContext(), "Turn on LED", Toast.LENGTH_SHORT).show();
+				outConnectedThread.write(message + "\n");    // Send "1" via Bluetooth
+			}
+		});
+		
+		btnGPS.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				//set up initial gps stuff
+				Location location = locManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+//				Location location = locManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+				longitude = location.getLongitude();
+				txtLongitude.setText("Longitude: " + longitude);
+				latitude = location.getLatitude();
+				txtLatitude.setText("Latitude: " + latitude);
+				altitude = location.getAltitude();
+				txtAltitude.setText("Elevation: " + altitude);
+				speed = location.getSpeed();
+				txtSpeed.setText(speed + "m/s");
+				
+				outConnectedThread.write("%Speed: " + speed + "m/s\n" + "Longitude: " + longitude + "\n" + "Latitude: " + latitude + "\n" + "Elevation: " + altitude + "\n");
+
 			}
 		});
 	}
@@ -152,7 +210,7 @@ public class MainActivity extends Activity {
 		BluetoothDevice outputDevice = btAdapter.getRemoteDevice(outputAddress);
 		
 		
-		//input socket shit
+		//input socket
 		try {
 			inSocket = createBluetoothSocket(inputDevice);
 		} catch (IOException e) {
@@ -172,7 +230,7 @@ public class MainActivity extends Activity {
 			}
 		}
 		
-		//output socket shit
+		//output socket
 		try {
 			outSocket = createBluetoothSocket(outputDevice);
 		} catch (IOException e) {
@@ -206,7 +264,7 @@ public class MainActivity extends Activity {
 	public void onPause()
 	{
 		super.onPause();
-		try
+		/*try
 		{
 			//Don't leave Bluetooth sockets open when leaving activity
 			inSocket.close();
@@ -214,6 +272,7 @@ public class MainActivity extends Activity {
 		} catch (IOException e2) {
 			//insert code to deal with this
 		}
+		*/
 	}
 
 	//Checks that the Android device Bluetooth is available and prompts to be turned on if off

@@ -92,7 +92,7 @@ public class DeviceListActivity extends Activity {
         		deviceOneInfo = ((TextView) v).getText().toString();
         		deviceOneAddress = deviceOneInfo.substring(deviceOneInfo.length() - 17);
         		
-        		textView1.setText("Input: connected to address " + deviceOneAddress);
+        		textView1.setText("Handlebar address: " + deviceOneAddress);
         		
         	}
         	else{
@@ -114,7 +114,7 @@ public class DeviceListActivity extends Activity {
     };
  
     private void checkBTState() {
-        // Check device has Bluetooth and that it is turned on
+        // Check device has Bluetooth and tha it is turned on
          mBtAdapter=BluetoothAdapter.getDefaultAdapter(); // CHECK THIS OUT THAT IT WORKS!!!
         if(mBtAdapter==null) { 
             Toast.makeText(getBaseContext(), "Device does not support Bluetooth", Toast.LENGTH_SHORT).show();

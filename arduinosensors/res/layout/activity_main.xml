@@ -40,21 +40,48 @@
         android:layout_alignParentRight="true"
         android:text="End ride" />
  
-    <TextView
-        android:id="@+id/sensorView0"
+
+	<TextView
+        android:id="@+id/txtSpeed"
         android:textSize="36sp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="196dp"
-        android:text="17 mph"
+        android:layout_marginTop="150dp"
         android:textAppearance="?android:attr/textAppearanceMedium" />
-    
+     
+	<TextView
+        android:id="@+id/txtLatitude"
+        android:textSize="18sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+    	android:layout_below="@+id/txtSpeed"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+	<TextView
+        android:id="@+id/txtLongitude"
+        android:textSize="18sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+    	android:layout_below="@+id/txtLatitude"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+	<TextView
+        android:id="@+id/txtAltitude"
+        android:textSize="18sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+    	android:layout_below="@+id/txtLongitude"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+	
     <EditText
     	android:id="@+id/input_text"
     	android:layout_width="fill_parent"
     	android:layout_height="wrap_content"
-    	android:layout_below="@+id/sensorView0"
+    	android:layout_below="@+id/txtAltitude"
     	android:hint="@string/edit_message"
     	android:inputType="text" />
     
@@ -67,24 +94,12 @@
         android:text = "@string/button_send" 
         android:onClick = "sendMessage" />
     
-	<TextView
-        android:id="@+id/displayAddressIn"
-        android:textSize="24sp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_below="@+id/send_input"
-        android:text="user address"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
-	
-	<TextView
-        android:id="@+id/displayAddressOut"
-        android:textSize="24sp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_below="@+id/displayAddressIn"
-        android:text="user address"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
+    <Button
+        android:id = "@+id/getGPS"
+        android:layout_width = "wrap_content"
+        android:layout_height = "wrap_content"
+        android:layout_below = "@+id/send_input"
+        android:layout_centerHorizontal = "true"
+        android:text = "GPS"  />
       
 </RelativeLayout>
